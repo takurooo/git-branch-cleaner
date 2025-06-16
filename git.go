@@ -108,7 +108,7 @@ func isBranchMerged(branchName, mainBranch string) bool {
 	if branchName == mainBranch {
 		return false
 	}
-	
+
 	cmd := exec.Command("git", "merge-base", "--is-ancestor", branchName, mainBranch)
 	err := cmd.Run()
 	return err == nil
