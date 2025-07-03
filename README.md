@@ -2,7 +2,7 @@
 
 A Terminal User Interface (TUI) tool for efficiently managing and cleaning up local Git branches.
 
-![Git Branch Cleaner Mascot](./git-cleaner-mascot.svg)
+![Git Branch Cleaner Mascot](./git-branch-cleaner.png)
 
 ## Features
 
@@ -61,27 +61,11 @@ Navigate to any Git repository and run:
 git-branch-cleaner
 ```
 
-### Interface Overview
-
-```
-┌─ Git Branch Cleaner ─────────────────────────────────────┐
-│ Repository: /path/to/your/repo                           │
-├──────────────────────────────────────────────────────────┤
-│ Select │ Branch             │ Status   │ Date       │... │
-│ [ ]    │ feature/new-ui     │ Unmerged │ 2024-06-15 │... │
-│ [x]    │ feature/bug-fix    │ Merged   │ 2024-06-10 │... │
-│ [ ]    │ hotfix/critical    │ Unmerged │ 2024-06-14 │... │
-│ [-]    │ main               │ -        │ 2024-06-16 │... │
-├──────────────────────────────────────────────────────────┤
-│ space: select • d: delete selected • q: quit            │
-└──────────────────────────────────────────────────────────┘
-```
-
 ### Branch Information
 
 - **Select**: Checkbox for multi-selection (protected branches show `[-]`)
 - **Branch**: Branch name
-- **Status**: 
+- **Status**:
   - `Merged` - Branch has been merged into main
   - `Unmerged` - Branch contains commits not in main
   - `-` - Protected branch (main/master)
