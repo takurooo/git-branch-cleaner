@@ -44,15 +44,27 @@ func getCurrentBranch() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func getMainBranch() string {
+func getDefaultBranch() (string, error) {
+	cmd := exec.Command("git", "symbolic-ref", "refs/remotes/origin/HEAD")
+	output, err := cmd.Output()
+	if err == nil {
+		defaultBranch := strings.TrimSpace(string(output))
+		defaultBranch = strings.TrimPrefix(defaultBranch, "refs/remotes/origin/")
+		
+		cmd = exec.Command("git", "show-ref", "--verify", "--quiet", "refs/heads/"+defaultBranch)
+		if cmd.Run() == nil {
+			return defaultBranch, nil
+		}
+	}
+	
 	branches := []string{"main", "master"}
 	for _, branch := range branches {
 		cmd := exec.Command("git", "show-ref", "--verify", "--quiet", "refs/heads/"+branch)
 		if cmd.Run() == nil {
-			return branch
+			return branch, nil
 		}
 	}
-	return "main"
+	return "main", nil
 }
 
 func getAllBranches() ([]Branch, error) {
@@ -62,7 +74,10 @@ func getAllBranches() ([]Branch, error) {
 		return nil, fmt.Errorf("failed to get branches: %w", err)
 	}
 
-	mainBranch := getMainBranch()
+	defaultBranch, err := getDefaultBranch()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default branch: %w", err)
+	}
 	var branches []Branch
 
 	scanner := bufio.NewScanner(strings.NewReader(string(output)))
@@ -83,9 +98,9 @@ func getAllBranches() ([]Branch, error) {
 			commitDate = time.Now()
 		}
 
-		isMerged := isBranchMerged(branchName, mainBranch)
-		commitsAhead := getCommitsAhead(branchName, mainBranch)
-		isMain := branchName == mainBranch
+		isMerged := isBranchMerged(branchName, defaultBranch)
+		commitsAhead := getCommitsAhead(branchName, defaultBranch)
+		isDefault := branchName == defaultBranch
 
 		branch := Branch{
 			Name:           branchName,
@@ -94,7 +109,7 @@ func getAllBranches() ([]Branch, error) {
 			LastCommitMsg:  subject,
 			CommitsAhead:   commitsAhead,
 			Author:         author,
-			IsMain:         isMain,
+			IsMain:         isDefault,
 			Selected:       false,
 		}
 
@@ -104,22 +119,22 @@ func getAllBranches() ([]Branch, error) {
 	return branches, nil
 }
 
-func isBranchMerged(branchName, mainBranch string) bool {
-	if branchName == mainBranch {
+func isBranchMerged(branchName, defaultBranch string) bool {
+	if branchName == defaultBranch {
 		return false
 	}
 
-	cmd := exec.Command("git", "merge-base", "--is-ancestor", branchName, mainBranch)
+	cmd := exec.Command("git", "merge-base", "--is-ancestor", branchName, defaultBranch)
 	err := cmd.Run()
 	return err == nil
 }
 
-func getCommitsAhead(branchName, mainBranch string) int {
-	if branchName == mainBranch {
+func getCommitsAhead(branchName, defaultBranch string) int {
+	if branchName == defaultBranch {
 		return 0
 	}
 
-	cmd := exec.Command("git", "rev-list", "--count", branchName, "^"+mainBranch)
+	cmd := exec.Command("git", "rev-list", "--count", branchName, "^"+defaultBranch)
 	output, err := cmd.Output()
 	if err != nil {
 		return 0
