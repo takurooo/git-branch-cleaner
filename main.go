@@ -158,7 +158,7 @@ func initialModel() Model {
 		if branch.Selected {
 			checkbox = "[x]"
 		}
-		if branch.IsMain {
+		if branch.IsDefault {
 			checkbox = "[-]"
 		}
 
@@ -166,12 +166,12 @@ func initialModel() Model {
 		if branch.IsMerged {
 			status = "Merged"
 		}
-		if branch.IsMain {
+		if branch.IsDefault {
 			status = "-"
 		}
 
 		commitsStr := fmt.Sprintf("%d↑", branch.CommitsAhead)
-		if branch.IsMain {
+		if branch.IsDefault {
 			commitsStr = "-"
 		}
 
@@ -244,7 +244,7 @@ func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	case key.Matches(msg, m.keys.Select):
 		cursor := m.table.Cursor()
-		if cursor >= 0 && cursor < len(m.branches) && !m.branches[cursor].IsMain {
+		if cursor >= 0 && cursor < len(m.branches) && !m.branches[cursor].IsDefault {
 			m.branches[cursor].Selected = !m.branches[cursor].Selected
 			m.selected[cursor] = m.branches[cursor].Selected
 			m = m.updateTableRows()
@@ -384,7 +384,7 @@ func (m Model) updateTableRows() Model {
 		if branch.Selected {
 			checkbox = "[x]"
 		}
-		if branch.IsMain {
+		if branch.IsDefault {
 			checkbox = "[-]"
 		}
 
@@ -392,12 +392,12 @@ func (m Model) updateTableRows() Model {
 		if branch.IsMerged {
 			status = "Merged"
 		}
-		if branch.IsMain {
+		if branch.IsDefault {
 			status = "-"
 		}
 
 		commitsStr := fmt.Sprintf("%d↑", branch.CommitsAhead)
-		if branch.IsMain {
+		if branch.IsDefault {
 			commitsStr = "-"
 		}
 

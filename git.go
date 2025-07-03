@@ -16,7 +16,7 @@ type Branch struct {
 	LastCommitMsg  string
 	CommitsAhead   int
 	Author         string
-	IsMain         bool
+	IsDefault      bool
 	Selected       bool
 }
 
@@ -35,32 +35,33 @@ func getRepositoryPath() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func getCurrentBranch() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("failed to get current branch: %w", err)
-	}
-	return strings.TrimSpace(string(output)), nil
+// branchExists checks if a branch exists locally
+func branchExists(branchName string) bool {
+	cmd := exec.Command("git", "show-ref", "--verify", "--quiet", "refs/heads/"+branchName)
+	return cmd.Run() == nil
 }
 
+// getDefaultBranch attempts to detect the repository's default branch
+// by checking remote HEAD reference first, then falling back to common names
 func getDefaultBranch() (string, error) {
+	// First, try to get the default branch from remote origin HEAD
 	cmd := exec.Command("git", "symbolic-ref", "refs/remotes/origin/HEAD")
 	output, err := cmd.Output()
 	if err == nil {
 		defaultBranch := strings.TrimSpace(string(output))
 		defaultBranch = strings.TrimPrefix(defaultBranch, "refs/remotes/origin/")
 		
-		cmd = exec.Command("git", "show-ref", "--verify", "--quiet", "refs/heads/"+defaultBranch)
-		if cmd.Run() == nil {
+		// Verify the branch exists locally
+		if branchExists(defaultBranch) {
 			return defaultBranch, nil
 		}
+		// Note: Remote HEAD points to a branch that doesn't exist locally, falling back
 	}
 	
+	// Fall back to checking common default branch names
 	branches := []string{"main", "master"}
 	for _, branch := range branches {
-		cmd := exec.Command("git", "show-ref", "--verify", "--quiet", "refs/heads/"+branch)
-		if cmd.Run() == nil {
+		if branchExists(branch) {
 			return branch, nil
 		}
 	}
@@ -109,7 +110,7 @@ func getAllBranches() ([]Branch, error) {
 			LastCommitMsg:  subject,
 			CommitsAhead:   commitsAhead,
 			Author:         author,
-			IsMain:         isDefault,
+			IsDefault:      isDefault,
 			Selected:       false,
 		}
 
